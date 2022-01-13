@@ -28,11 +28,30 @@
       "title": "Time Tracking",
       "properties": {
         "timeTracking.samplingIntervalLength": {
-          "type": "int",
+          "type": "number",
           "default": 30,
           "minimum": 10,
           "maximum": 600,
           "description": "Length of the sampling interval (in seconds)"
+        },
+        "timeTracking.defaultLivePlotTimeRange": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 480,
+          "description": "Default time range for plotting live data (in minutes)"
+        },
+        "timeTracking.autosave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Autosave live data in the file system"
+        },
+        "timeTracking.autosavePeriod": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "maximum": 480,
+          "markdownDescription": "Controls how often live data is autosaved (once per x minutes). Only applies when `#timeTracking.autosave#` is enabled"
         }
       }
     }

@@ -1,22 +1,15 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { DateTime } from 'luxon';
+import TimeTrackingEvent from './TimeTrackingEvent';
 
-class FileSystem {
+// TODO: Add events counter in an interval
+
+class TimeTrackingFileSystem {
   globalStorageUri: vscode.Uri;
 
   constructor(globalStorageUri: vscode.Uri) {
     this.globalStorageUri = globalStorageUri;
-  }
-
-  async init() {
-    const dirName = path.basename(this.globalStorageUri.fsPath);
-    const dir = vscode.Uri.file(path.dirname(this.globalStorageUri.fsPath));
-	  const dirs = await vscode.workspace.fs.readDirectory(dir);
-    if (!dirs.some(([name, ft]) => name === dirName && ft === vscode.FileType.Directory)) {
-      const dataDir = vscode.Uri.file(path.join(this.globalStorageUri.fsPath, 'data'));
-      await vscode.workspace.fs.createDirectory(dataDir);
-    }
   }
 
   async save(buffer: any[]) {
@@ -38,16 +31,19 @@ class FileSystem {
     }
   }
 
-  async read(filePath: string[]) {
+  async read(date: DateTime): Promise<TimeTrackingEvent[]> {
+    const { year, month, day } = date;
+    const filePath = [year, month, day].map(d => d.toString());
+    filePath[filePath.length - 1] = `${filePath[filePath.length - 1]}.jsonl`;
     const f = vscode.Uri.file(path.join(this.globalStorageUri.fsPath, 'data', ...filePath));
     // try {
     const rawData = await vscode.workspace.fs.readFile(f);
     const rawData2 = new TextDecoder().decode(rawData);
     const rawData3 = rawData2.split('\n');
     rawData3.pop();
-    const data = rawData3.map(d => JSON.parse(d));
+    const data = rawData3.map(d => TimeTrackingEvent.deserialize(d));
     return data;
   }
 }
 
-export default FileSystem;
+export default TimeTrackingFileSystem;
