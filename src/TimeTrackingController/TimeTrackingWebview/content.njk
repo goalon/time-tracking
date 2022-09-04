@@ -1,0 +1,106 @@
+{# Time Tracking #}
+{# Docs & License: https://github.com/goalon/time-tracking #}
+{# 2022 Mateusz Bajorek #}
+{# University of Warsaw, MIMUW, SOVA #}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracking</title>
+    <script src="{{ chartSrc }}"></script>
+    <script src="{{ luxonSrc }}"></script>
+    <script src="{{ chartAdapterLuxonSrc }}"></script>
+    <script src="{{ fullCalendarSrc }}"></script>
+    <link href="{{ fullCalendarStyleSrc }}" rel="stylesheet" />
+    <link href="{{ codiconsStyleSrc }}" rel="stylesheet" />
+    <link href="{{ styleSrc }}" rel="stylesheet" />
+    <script src="{{ scriptSrc }}"></script>
+  </head>
+  <body>
+    <div class="core">
+      <div class="top-actions">
+        <div class="view-switches">
+          <button
+            id="calendar-view-button"
+            class="codicon codicon-calendar"
+            onclick="helper.switchToCalendarView()"
+          >
+          </button>
+          <button
+            id="live-view-button"
+            class="codicon codicon-graph-line"
+            onclick="helper.switchToLiveView()"
+          >
+          </button>
+        </div>
+        <div class="manual-actions">
+          <button
+            id="save-button"
+            class="codicon codicon-save"
+            onclick="helper.save()"
+          >
+          </button>
+          <button
+            id="upload-button"
+            class="codicon codicon-cloud-upload"
+            onclick="helper.upload()"
+          >
+          </button>
+        </div>
+      </div>
+      <canvas id="chart"></canvas>
+      <div id="live-view" class="time-spans">
+        <button onclick="helper.changeTimeSpan(10)">
+          10 m
+        </button>
+        <button onclick="helper.changeTimeSpan(30)">
+          30 m
+        </button>
+        <button onclick="helper.changeTimeSpan(60)">
+          1 h
+        </button>
+      </div>
+      <div id="day-view">
+        <input id="fromTime" type="time">
+        <input id="toTime" type="time">
+        <button onclick="postTime()">
+          Change time
+        </button>
+      </div>
+      <div id="calendar-view">
+        <div id="calendar"></div>
+      </div>
+    </div>
+    {# todo Move here last save and upload times #}
+    <div class="metadata">
+      <div class="metadata-labels">
+        <div>User id:</div>
+        <div>Last save:</div>
+        <div>Last upload:</div>
+      </div>
+      <div class="metadata-values">
+        <div>{{ userId }}</div>
+        <input
+          type="datetime-local"
+          id="meeting-time"
+          name="meeting-time"
+          value="{{ lastSaveTimestamp }}"
+          disabled
+        >
+        <input
+          type="datetime-local"
+          id="meeting-time"
+          name="meeting-time"
+          value="{{ lastUploadTimestamp }}"
+          disabled
+        >
+      </div>
+      <button class="codicon codicon-refresh"></button>
+    </div>
+    <script>
+      const helper = new TimeTrackingWebviewHelper();
+    </script>
+  </body>
+</html>

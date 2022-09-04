@@ -1,0 +1,55 @@
+/**
+ * Time Tracking
+ * Docs & License: https://github.com/goalon/time-tracking
+ * 2022 Mateusz Bajorek
+ * University of Warsaw, MIMUW, SOVA
+ */
+
+body {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#day-view {
+  display: none;
+}
+
+#live-view-button {
+  display: none;
+}
+
+#calendar-view-button {
+  margin-right: 20px;
+}
+
+.time-spans {
+  display: flex;
+}
+
+.metadata {
+  display: flex;
+  align-self: flex-end;
+  margin-top: 40px;
+  margin-bottom: 10px;
+}
+
+#live-view-button, #calendar-view-button {
+  font-size: 30px;
+}
+
+.view-switches {
+  display: flex;
+}
+
+#save-button {
+  margin-right: 10px;
+}
+
+.top-actions {
+  display: flex;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  justify-content: space-between;
+}

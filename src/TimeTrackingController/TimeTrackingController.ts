@@ -1,94 +1,116 @@
-import * as vscode from 'vscode';
-import TimeTrackingWebview from './TimeTrackingWebview/TimeTrackingWebview';
-import TimeTrackingEventBuffer from './TimeTrackingEventBuffer';
-import { DateTime, Interval, Duration } from 'luxon';
+/**
+ * Time Tracking
+ * Docs & License: https://github.com/goalon/time-tracking
+ * 2022 Mateusz Bajorek
+ * University of Warsaw, MIMUW, SOVA
+ */
 
-type WebviewViewName = 'live' | 'calendar' | 'day' | 'weird';
+import * as vscode from 'vscode';
+import * as uuid from 'uuid';
+import { DateTime } from 'luxon';
+import TimeTrackingEventBuffer from './TimeTrackingEventBuffer';
+import { TimeTrackingOpener, TimeTrackingUploader } from './commands/commands';
 
 class TimeTrackingController {
-  context: vscode.ExtensionContext;
-  buffer: TimeTrackingEventBuffer;
+  private context: vscode.ExtensionContext;
+  private buffer: TimeTrackingEventBuffer;
+
+  // todo lookup and check private
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
-    this.buffer = new TimeTrackingEventBuffer(context.globalStorageUri);
+
+    // TODO Move elsewhere
+    if (!context.globalState.get('userId')) {
+        context.globalState.update('userId', uuid.v4());
+    }
+
+    this.buffer = new TimeTrackingEventBuffer(context);
   }
 
-  activate() {
-    // TODO: Save to file in an hour
-    // TODO: Queue buffer for limiting entries (last 10 minutes)
+  private saveOnInterval(): vscode.Disposable {
+    const saveInterval = setInterval(
+      async () => {
+        await this.buffer.save();
+      },
+      60 * 60 * 1000, // todo unify times with variables
+    );
 
-    // TODO: It's also a disposable
-    vscode.workspace.onDidChangeTextDocument((event) => {
-      this.buffer.push(event);
+    // todo fix ui
+
+    return new vscode.Disposable(() => {
+      clearInterval(saveInterval);
     });
+  }
 
-    const disposable = vscode.commands.registerCommand('timeTracking.open', () => {
-      const panel = vscode.window.createWebviewPanel(
-        'timeTracking',
-        'Time Tracking',
-        vscode.ViewColumn.Beside,
-        {
-          enableScripts: true,
-          enableCommandUris: true,
-        },
-      );
-      const webview = new TimeTrackingWebview(this.context.extensionPath, panel);
-      panel.webview.html = webview.getContent();
-      panel.webview.postMessage({ data: this.buffer.getDataForPlot() }); // TODO: Move to content
-      const refreshWebview = () => {
-        panel.webview.postMessage({ data: this.buffer.getDataForPlot() });
-      };
-      const refreshWebview2 = () => {
-        panel.webview.postMessage({ data: this.buffer.getDataForPlot2() });
-      };
-      let webviewRefreshInterval = setInterval(refreshWebview, 5000); // TODO: DISPOSABLE
+  private uploadOnInterval(): vscode.Disposable {
+    const uploadInterval = setInterval(
+      async () => {
+        await this.buffer.upload();
+      },
+      2 * 60 * 60 * 1000,
+    );
 
-      panel.webview.onDidReceiveMessage(
-        async (message: { view: WebviewViewName, date?: string, fromTime?: string, toTime?: string, annotations?: boolean }) => {
-          switch (message.view) {
-            case 'live':
-              panel.webview.postMessage({ data: this.buffer.getDataForPlot() });
-              webviewRefreshInterval = setInterval(refreshWebview, 5000);
-              break;
-            case 'calendar':
-              clearInterval(webviewRefreshInterval);
-              break;
-            case 'weird':
-              clearInterval(webviewRefreshInterval);
-              webviewRefreshInterval = setInterval(refreshWebview2, 5000);
-              break;
-            case 'day':
-              const selectedDate = DateTime.fromISO(message.date!);
-              await this.buffer.read(selectedDate);
-              clearInterval(webviewRefreshInterval);
-
-              if (message.fromTime && message.toTime) {
-                const [fromHours, fromMinutes] = message.fromTime.split(':');
-                const [toHours, toMinutes] = message.toTime.split(':');
-                const fromDateTime = selectedDate.set({ hour: parseInt(fromHours, 10), minute: parseInt(fromMinutes, 10) });
-                const toDateTime = selectedDate.set({ hour: parseInt(toHours, 10), minute: parseInt(toMinutes, 10) });
-                const interval = Interval.fromDateTimes(fromDateTime, toDateTime);
-                panel.webview.postMessage({ data: this.buffer.getDataForPlot('static', interval, message.annotations) });
-              } else {
-                const interval = Interval.after(selectedDate, Duration.fromObject({ hours: 24 }));
-                panel.webview.postMessage({ data: this.buffer.getDataForPlot('static', interval, message.annotations) });
-              }
-              break;
-            // TODO: default
-          }
-        },
-        undefined,
-        this.context.subscriptions
-      );
+    return new vscode.Disposable(() => {
+      clearInterval(uploadInterval);
     });
+  }
 
-    const disposable2 = vscode.commands.registerCommand('timeTracking.dump', () => {
-      this.buffer.save();
+  async activate() {
+    vscode.workspace.onDidChangeTextDocument(
+      (event) => {
+        this.buffer.push(event);
+      },
+      undefined,
+      this.context.subscriptions,
+    );
+    
+    const timeTrackingOpener = new TimeTrackingOpener(this.context, this.buffer);
+    
+    const openerDisposable = vscode.commands.registerCommand(TimeTrackingOpener.id, () => timeTrackingOpener.run());
+    const dumperDisposable = vscode.commands.registerCommand('timeTracking.dump', async () => {
+      await this.buffer.save();
     });
+    const uploaderDisposable = vscode.commands.registerCommand(TimeTrackingUploader.id, async () => {
+      const lastUploadTimestamp: string = this.context.globalState.get('lastUploadTimestamp') || '';
+      if (lastUploadTimestamp) {
+        const lastUploadDateTime = DateTime.fromISO(lastUploadTimestamp);
+        if (DateTime.now().diff(lastUploadDateTime).hours < 2) {
+          vscode.window.showErrorMessage("Upload unavailable", "Last upload took place less than 2 hours ago."); // todo check
+          return;
+        }
+      }
 
-    this.context.subscriptions.push(disposable);
-    this.context.subscriptions.push(disposable2);
+      await this.buffer.upload();
+    });
+    const saveOnIntervalDisposable = this.saveOnInterval();
+    const uploadOnIntervalDisposable = this.uploadOnInterval();
+
+    vscode.commands.executeCommand('setContext', 'timeTracking.showCommand', true);
+    
+    this.context.subscriptions.push(
+      saveOnIntervalDisposable,
+      uploadOnIntervalDisposable,
+      openerDisposable,
+      dumperDisposable,
+      uploaderDisposable,
+    );
+
+    const lastUploadTimestamp: string = this.context.globalState.get('lastUploadTimestamp') || '';
+    if (!lastUploadTimestamp) {
+      await this.buffer.upload();
+    } else {
+      const lastUploadDateTime = DateTime.fromISO(lastUploadTimestamp);
+      if (DateTime.now().diff(lastUploadDateTime).hours > 8) {
+        await this.buffer.upload(); // todo unify
+      }
+    }
+  }
+
+  async deactivate() {
+    vscode.commands.executeCommand('setContext', 'timeTracking.showCommand', false);
+    
+    await this.buffer.save();
   }
 }
 

@@ -1,29 +1,52 @@
+/**
+ * Time Tracking
+ * Docs & License: https://github.com/goalon/time-tracking
+ * 2022 Mateusz Bajorek
+ * University of Warsaw, MIMUW, SOVA
+ */
+
 import * as vscode from 'vscode';
 import { DateTime, Interval } from 'luxon';
+import * as sha256 from 'crypto-js/sha256';
+
+type TimeTrackingEventLanguages = {
+  [languageId: string]: {
+    additions: number;
+    deletions: number;
+    actions: number;
+  }
+};
 
 class TimeTrackingEvent {
   additions: number;
   deletions: number;
+  actions: number;
   interval: Interval;
-  workspaceName: string | null;
-  languages: {
-    [languageId: string]: {
-      additions: number;
-      deletions: number;
-    }
-  };
+  workspaceNameHash: string | null;
+  languages: TimeTrackingEventLanguages;
 
   constructor(date?: DateTime) {
     this.additions = 0;
     this.deletions = 0;
+    this.actions = 0;
     const currentDate = date || DateTime.now();
     this.interval = Interval.fromDateTimes(currentDate, currentDate);
-    this.workspaceName = vscode.workspace.name || null;
+    if (vscode.workspace.name) {
+      this.workspaceNameHash = sha256(vscode.workspace.name).toString();
+    } else {
+      this.workspaceNameHash = null;
+    }
     this.languages = {};
   }
 
   serialize(): string {
-    return JSON.stringify(this);
+    const data = {
+      ...this,
+      interval: undefined,
+      start: this.interval.start,
+      end: this.interval.end,
+    };
+    return JSON.stringify(data);
   }
 
   static deserialize(eventString: string): TimeTrackingEvent {
@@ -33,7 +56,7 @@ class TimeTrackingEvent {
     event.deletions = eventObject.deletions;
     const { start, end } = eventObject;
     event.interval = Interval.fromISO(`${start}/${end}`);
-    event.workspaceName = eventObject.workspaceName;
+    event.workspaceNameHash = eventObject.workspaceNameHash;
     event.languages = eventObject.languages;
     
     return event;
@@ -52,13 +75,19 @@ class TimeTrackingEvent {
 
     this.additions += additions;
     this.deletions += deletions;
+    ++this.actions;
 
     if (!(languageId in this.languages)) {
-      this.languages[languageId] = { additions: 0, deletions: 0 };
+      this.languages[languageId] = { additions, deletions, actions: 1 };
+    } else {
+      this.languages[languageId].additions += additions;
+      this.languages[languageId].deletions += deletions;
+      ++this.languages[languageId].actions;
     }
+  }
 
-    this.languages[languageId].additions += additions;
-    this.languages[languageId].deletions += deletions;
+  isEmpty(): boolean {
+    return this.additions === 0 && this.deletions === 0;
   }
 }
 

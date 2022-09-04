@@ -17,44 +17,20 @@
     "commands": [
       {
         "command": "timeTracking.open",
-        "title": "Open Time Tracking"
+        "title": "Open Time Tracking",
+        "when": "timeTracking.showCommand"
       },
       {
         "command": "timeTracking.dump",
-        "title": "Dump Time Tracking data to a file"
+        "title": "Dump Time Tracking data to a file",
+        "when": "inDebugMode && timeTracking.showCommand"
+      },
+      {
+        "command": "timeTracking.upload",
+        "title": "Upload Time Tracking data for an analysis",
+        "when": "inDebugMode && timeTracking.showCommand"
       }
-    ],
-    "configuration": {
-      "title": "Time Tracking",
-      "properties": {
-        "timeTracking.samplingIntervalLength": {
-          "type": "number",
-          "default": 30,
-          "minimum": 10,
-          "maximum": 600,
-          "description": "Length of the sampling interval (in seconds)"
-        },
-        "timeTracking.defaultLivePlotTimeRange": {
-          "type": "number",
-          "default": 10,
-          "minimum": 1,
-          "maximum": 480,
-          "description": "Default time range for plotting live data (in minutes)"
-        },
-        "timeTracking.autosave": {
-          "type": "boolean",
-          "default": true,
-          "description": "Autosave live data in the file system"
-        },
-        "timeTracking.autosavePeriod": {
-          "type": "number",
-          "default": 30,
-          "minimum": 5,
-          "maximum": 480,
-          "markdownDescription": "Controls how often live data is autosaved (once per x minutes). Only applies when `#timeTracking.autosave#` is enabled"
-        }
-      }
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -66,20 +42,32 @@
   },
   "devDependencies": {
     "@types/glob": "^7.1.3",
+    "@types/luxon": "^2.0.8",
     "@types/mocha": "^8.2.2",
     "@types/node": "14.x",
+    "@types/nunjucks": "^3.2.1",
+    "@types/tar": "^6.1.1",
+    "@types/uuid": "^8.3.4",
     "@types/vscode": "^1.61.0",
     "@typescript-eslint/eslint-plugin": "^4.26.0",
     "@typescript-eslint/parser": "^4.26.0",
     "eslint": "^7.27.0",
     "glob": "^7.1.7",
-    "mocha": "^8.4.0",
+    "mocha": "^9.2.2",
     "typescript": "^4.3.2",
     "vscode-test": "^1.5.2"
   },
   "dependencies": {
-    "@types/luxon": "^2.0.8",
+    "@types/crypto-js": "^4.1.1",
+    "@vscode/codicons": "^0.0.32",
     "chart.js": "^3.6.0",
-    "luxon": "^2.2.0"
+    "chartjs-adapter-luxon": "^1.2.0",
+    "crypto-js": "^4.1.1",
+    "dropbox": "^10.26.0",
+    "fullcalendar": "^5.11.3",
+    "luxon": "^2.2.0",
+    "nunjucks": "^3.2.3",
+    "tar": "^6.1.11",
+    "uuid": "^8.3.2"
   }
 }
