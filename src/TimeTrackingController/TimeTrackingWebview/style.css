@@ -24,8 +24,27 @@ body {
   margin-right: 20px;
 }
 
-.time-spans {
-  display: flex;
+.view-controls {
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+#time-span {
+  margin-left: 5px;
+  font-size: 16px;
+}
+
+#from-time {
+  margin-right: 10px;
+}
+
+#to-time {
+  margin-right: 20px;
+}
+
+.view-controls input, .view-controls button {
+  font-size: 16px;
+  margin-bottom: 20px;
 }
 
 .metadata {
@@ -33,6 +52,39 @@ body {
   align-self: flex-end;
   margin-top: 40px;
   margin-bottom: 10px;
+}
+
+.metadata-labels {
+  display: flex;
+  flex-direction: column;
+  margin-right: 10px;
+}
+
+.metadata-labels label {
+  height: 18px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.metadata-values {
+  display: flex;
+  flex-direction: column;
+  width: 230px;
+}
+
+.metadata-values input {
+  font-size: 10px;
+  font-family: monospace;
+}
+
+#user-id {
+  padding: 1.5px 2px;
+}
+
+#refresh-metadata-button {
+  display: flex;
+  align-self: center;
+  margin-left: 10px;
 }
 
 #live-view-button, #calendar-view-button {

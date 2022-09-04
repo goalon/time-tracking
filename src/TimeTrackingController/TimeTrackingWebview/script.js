@@ -75,9 +75,14 @@ class TimeTrackingWebviewConstants {
     this.chartElem = document.getElementById('chart');
     this.calendarElem = document.getElementById('calendar');
     this.liveViewElem = document.getElementById('live-view');
+    this.dayViewElem = document.getElementById('day-view');
     this.calendarViewElem = document.getElementById('calendar-view');
     this.liveViewButton = document.getElementById('live-view-button');
     this.calendarViewButton = document.getElementById('calendar-view-button');
+    this.fromTimeInput = document.getElementById('from-time');
+    this.toTimeInput = document.getElementById('to-time');
+    this.lastSaveInput = document.getElementById('last-save');
+    this.lastUploadInput = document.getElementById('last-upload');
 
     this.liveViewElem.style.display = 'block';
     this.calendarViewElem.style.display = 'none';
@@ -97,6 +102,16 @@ class TimeTrackingEventsParser {
   }
 }
 
+const WEBVIEW_ACTION_NAME = {
+  loadLiveData: 'loadLiveData',
+  loadDayData: 'loadDayData',
+  save: 'save',
+  upload: 'upload',
+  refreshMetadata: 'refreshMetadata',
+  changeTimeSpan: 'changeTimeSpan',
+  changeTimeBoundaries: 'changeTimeBoundaries',
+};
+
 class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
   constructor() {
     super();
@@ -108,16 +123,28 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
 
     window.addEventListener('message', event => {
       switch (event.data.action) {
-        case 'loadLiveData':
+        case WEBVIEW_ACTION_NAME.loadLiveData:
           this.loadLiveData(event.data.data);
           break;
-        case 'loadDayData':
+        case WEBVIEW_ACTION_NAME.loadDayData:
           if (!event.data.error) {
             this.loadDayData(event.data.data);
           }
           break;
+        case WEBVIEW_ACTION_NAME.changeTimeBoundaries:
+          this.reloadDayData(event.data.data);
+          break;
+        case WEBVIEW_ACTION_NAME.refreshMetadata:
+          const { lastSaveTimestamp, lastUploadTimestamp } = event.data.data;
+          if (lastSaveTimestamp) {
+            this.lastSaveInput.value = lastSaveTimestamp;
+          }
+          if (lastUploadTimestamp) {
+            this.lastUploadInput.value = lastUploadTimestamp;
+          }
+          break;
         default:
-          console.error(`Unrecognized event action: ${event.action}`);
+          console.error(`Unrecognized event action: ${event.data.action}`);
       }
     });
   }
@@ -133,9 +160,15 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
   loadDayData({ totalBuffer, languagesBuffer, dateTimeLabels }) {
     this.destroyCalendarSafely();
     this.calendarViewButton.style.display = 'block';
+    this.dayViewElem.style.display = 'block';
 
     const staticEventsParser = new TimeTrackingEventsParser(totalBuffer, languagesBuffer, dateTimeLabels, null);
     this.showNewEventsData(staticEventsParser);
+  }
+
+  reloadDayData({ totalBuffer, languagesBuffer, dateTimeLabels }) {
+    const staticEventsParser = new TimeTrackingEventsParser(totalBuffer, languagesBuffer, dateTimeLabels, null);
+    this.showUpdatedEventsData(staticEventsParser);
   }
 
   helpSetDisplayCSS(flag) {
@@ -163,6 +196,7 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
     this.destroyCalendarSafely();
 
     this.liveViewElem.style.display = this.helpSetDisplayCSS(willShowLiveView);
+    this.dayViewElem.style.display = 'none';
     this.calendarViewElem.style.display = this.helpSetDisplayCSS(!willShowLiveView);
     this.liveViewButton.style.display = this.helpSetDisplayCSS(!willShowLiveView);
     this.calendarViewButton.style.display = this.helpSetDisplayCSS(willShowLiveView);
@@ -221,11 +255,30 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
     this.calendar.render();
   }
 
-  switchToDayView = () => {
-    this.vscode.postMessage({ action: 'loadDayData', data: { date: this.selectedDate } });
+  switchToDayView() {
+    this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.loadDayData, data: { date: this.selectedDate } });
   };
 
-  changeTimeSpan = (timeSpanMinutes) => {
-    this.vscode.postMessage({ action: 'changeTimeSpan', data: { timeSpanMinutes } });
+  changeTimeSpan(timeSpanMinutes) {
+    this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.changeTimeSpan, data: { timeSpanMinutes } });
   };
+
+  save() {
+    this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.save });
+  };
+
+  upload() {
+    this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.upload });
+  };
+  
+  refreshMetadata() {
+    this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.refreshMetadata });
+  };
+
+  changeTimeBoundaries() {
+    const fromTime = this.fromTimeInput.value;
+    const toTime = this.toTimeInput.value;
+    const data = { fromTime, toTime };
+    this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.changeTimeBoundaries, data });
+  }
 }

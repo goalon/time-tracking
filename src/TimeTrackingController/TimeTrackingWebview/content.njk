@@ -51,53 +51,60 @@
         </div>
       </div>
       <canvas id="chart"></canvas>
-      <div id="live-view" class="time-spans">
-        <button onclick="helper.changeTimeSpan(10)">
-          10 m
-        </button>
-        <button onclick="helper.changeTimeSpan(30)">
-          30 m
-        </button>
-        <button onclick="helper.changeTimeSpan(60)">
-          1 h
-        </button>
+      <div id="live-view" class="view-controls">
+        <label for="time-span">Show last</label>
+        {# todo fix #}
+        <select id="time-span" required>
+          <option value="600" selected>10 minutes</option>
+          <option value="1800">30 minutes</option>
+          <option value="3600">1 hour</option>
+        </select>
       </div>
-      <div id="day-view">
-        <input id="fromTime" type="time">
-        <input id="toTime" type="time">
-        <button onclick="postTime()">
+      <div id="day-view" class="view-controls">
+        <label for="from-time">From:</label>
+        <input id="from-time" type="time" value="00:00">
+        <label for="to-time">To:</label>
+        <input id="to-time" type="time" value="23:59">
+        <button onclick="helper.changeTimeBoundaries()">
           Change time
+          <i class="codicon codicon-check"></i>
         </button>
       </div>
       <div id="calendar-view">
         <div id="calendar"></div>
       </div>
     </div>
-    {# todo Move here last save and upload times #}
     <div class="metadata">
       <div class="metadata-labels">
-        <div>User id:</div>
-        <div>Last save:</div>
-        <div>Last upload:</div>
+        <label for="user-id">User id:</label>
+        <label for="last-save">Last save:</label>
+        <label for="last-upload">Last upload:</label>
       </div>
       <div class="metadata-values">
-        <div>{{ userId }}</div>
+        <input
+          id="user-id"
+          value="{{ userId }}"
+          disabled
+        >
         <input
           type="datetime-local"
-          id="meeting-time"
-          name="meeting-time"
+          id="last-save"
           value="{{ lastSaveTimestamp }}"
           disabled
         >
         <input
           type="datetime-local"
-          id="meeting-time"
-          name="meeting-time"
+          id="last-upload"
           value="{{ lastUploadTimestamp }}"
           disabled
         >
       </div>
-      <button class="codicon codicon-refresh"></button>
+      <button
+        id="refresh-metadata-button"
+        class="codicon codicon-refresh"
+        onclick="helper.refreshMetadata()"
+      >
+      </button>
     </div>
     <script>
       const helper = new TimeTrackingWebviewHelper();

@@ -15,9 +15,11 @@ import TimeTrackingEventStaticBuffer from '../TimeTrackingEventStaticBuffer';
 enum WebviewActionName {
   loadLiveData = 'loadLiveData',
   loadDayData = 'loadDayData',
-  saveDayData = 'saveDayData',
-  uploadDayData = 'uploadDayData',
+  save = 'save',
+  upload = 'upload',
+  refreshMetadata = 'refreshMetadata',
   changeTimeSpan = 'changeTimeSpan',
+  changeTimeBoundaries = 'changeTimeBoundaries',
 }
 
 class TimeTrackingOpener {
@@ -60,13 +62,13 @@ class TimeTrackingOpener {
     refreshWebview()();
 
     let webviewRefreshInterval = setInterval(refreshWebview(), 30 * 1000);
+    const staticBuffer = new TimeTrackingEventStaticBuffer(this.context);
 
     this.panel.webview.onDidReceiveMessage(
       async (message: { action: WebviewActionName, data: any }) => {
         switch (message.action) {
           case WebviewActionName.loadDayData:
             const selectedDate = DateTime.fromISO(message.data.date);
-            const staticBuffer = new TimeTrackingEventStaticBuffer(this.context);
             try {
               const normalizedBuffer = await staticBuffer.read(selectedDate);
               this.panel!.webview.postMessage({ action: WebviewActionName.loadDayData, data: normalizedBuffer });
@@ -79,6 +81,31 @@ class TimeTrackingOpener {
             clearInterval(webviewRefreshInterval);
             refreshWebview(message.data.timeSpanMinutes)();
             webviewRefreshInterval = setInterval(refreshWebview(message.data.timeSpanMinutes), 30 * 1000); // todo dynamic refresh time
+            break;
+          case WebviewActionName.save:
+            await this.buffer.save();
+            this.panel!.webview.postMessage({
+              action: WebviewActionName.refreshMetadata,
+              data: this.getMetadata(),
+            }); // todo unify
+            break;
+          case WebviewActionName.upload:
+            await this.buffer.upload();
+            this.panel!.webview.postMessage({
+              action: WebviewActionName.refreshMetadata,
+              data: this.getMetadata(),
+            }); // todo unify
+            break;
+          case WebviewActionName.refreshMetadata:
+            this.panel!.webview.postMessage({
+              action: WebviewActionName.refreshMetadata,
+              data: this.getMetadata(),
+            });
+            break;
+          case WebviewActionName.changeTimeBoundaries:
+            const { fromTime, toTime } = message.data;
+            const normalizedBuffer = staticBuffer.changeTimeBoundaries(fromTime, toTime);
+            this.panel!.webview.postMessage({ action: WebviewActionName.changeTimeBoundaries, data: normalizedBuffer });
             break;
           default:
             console.error("Webview action not recognized");
@@ -105,6 +132,21 @@ class TimeTrackingOpener {
 		const nodeModulesUri = vscode.Uri.file(nodeModulesPath);
   
     return [localResourcesUri, nodeModulesUri];
+  }
+
+  private getMetadata() {
+    // todo move elsewhere and unify two
+    // todo njk when dates empty
+    const lastSaveTimestampRaw: string = this.context.globalState.get('lastSaveTimestamp') || '';
+		const lastSaveTimestamp = lastSaveTimestampRaw ?
+			DateTime.fromISO(lastSaveTimestampRaw).toISO({ includeOffset: false }) :
+			'';
+		const lastUploadTimestampRaw: string = this.context.globalState.get('lastUploadTimestamp') || '';
+		const lastUploadTimestamp = lastUploadTimestampRaw ?
+			DateTime.fromISO(lastUploadTimestampRaw).toISO({ includeOffset: false }) :
+			'';
+
+    return { lastSaveTimestamp, lastUploadTimestamp };
   }
 }
 

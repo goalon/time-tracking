@@ -41,19 +41,17 @@ class TimeTrackingUploader {
       },
       ['data'],
     );
-    
+
     // TODO Unify the code. Provide the notifications for successes and errors.
     // TODO block uploading more than once per 2 hours
     const contents = await fs.readFile(inFilePath, null);
-    
+
     await dropbox.filesUpload({ path: outFilePath, contents, mode: { '.tag': 'overwrite' } })
       .then((response: any) => {
-        console.log(response);
-
         this.context.globalState.update('lastUploadTimestamp', DateTime.now());
       })
       .catch((uploadErr: Error<files.UploadError>) => {
-        console.log(uploadErr.user_message);
+        console.error(uploadErr);
       });
   }
 }
