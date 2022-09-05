@@ -81,6 +81,7 @@ class TimeTrackingWebviewConstants {
     this.calendarViewButton = document.getElementById('calendar-view-button');
     this.fromTimeInput = document.getElementById('from-time');
     this.toTimeInput = document.getElementById('to-time');
+    this.titleElem = document.getElementById('title');
     this.lastSaveInput = document.getElementById('last-save');
     this.lastUploadInput = document.getElementById('last-upload');
 
@@ -161,6 +162,8 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
     this.destroyCalendarSafely();
     this.calendarViewButton.style.display = 'block';
     this.dayViewElem.style.display = 'block';
+    const selectedDateLuxon = luxon.DateTime.fromISO(this.selectedDate);
+    this.titleElem.innerHTML = `${selectedDateLuxon.weekdayShort}, ${selectedDateLuxon.toISODate()}`;
 
     const staticEventsParser = new TimeTrackingEventsParser(totalBuffer, languagesBuffer, dateTimeLabels, null);
     this.showNewEventsData(staticEventsParser);
@@ -195,6 +198,7 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
     this.destroyChartSafely();
     this.destroyCalendarSafely();
 
+    this.titleElem.innerHTML = willShowLiveView ? "Live" : "Calendar";
     this.liveViewElem.style.display = this.helpSetDisplayCSS(willShowLiveView);
     this.dayViewElem.style.display = 'none';
     this.calendarViewElem.style.display = this.helpSetDisplayCSS(!willShowLiveView);
@@ -248,7 +252,7 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
     this.calendar = new FullCalendar.Calendar(this.calendarElem, {
       initialView: 'dayGridMonth',
       dateClick: (info) => {
-        this.selectedDate = info.date;
+        this.selectedDate = info.dateStr;
         this.switchToDayView();
       }
     });

@@ -72,8 +72,13 @@ class TimeTrackingOpener {
             try {
               const normalizedBuffer = await staticBuffer.read(selectedDate);
               this.panel!.webview.postMessage({ action: WebviewActionName.loadDayData, data: normalizedBuffer });
-            } catch {
-              vscode.window.showErrorMessage("Data file not found");
+            } catch (error) {
+              if (error instanceof vscode.FileSystemError) {
+                vscode.window.showErrorMessage("Data file not found");
+              } else {
+                console.error(error);
+                vscode.window.showErrorMessage("Unknown error");
+              }
               this.panel!.webview.postMessage({ action: WebviewActionName.loadDayData, error: true }); // todo check
             }
             break;

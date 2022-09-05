@@ -24,7 +24,10 @@ class TimeTrackingEventStaticBuffer {
     this.date = date;
     this.buffer = await this.fileSystem.read(date);
     const interval = Interval.after(date, { days: 1 });
-    return new TimeTrackingEventNormalizedBuffer(this.buffer, interval, Duration.fromObject({ seconds: 30 })); // TODO autoscale
+    const samplingIntervalSeconds = 30 * interval.length('minutes') / 10; // todo unify constants (config)
+    const samplingIntervalDuration = Duration.fromObject({ seconds: samplingIntervalSeconds });
+
+    return new TimeTrackingEventNormalizedBuffer(this.buffer, interval, samplingIntervalDuration);
   }
 
   changeTimeBoundaries(from: string, to: string) {
@@ -33,7 +36,10 @@ class TimeTrackingEventStaticBuffer {
     const fromDate = this.date!.set({ hour: fromHour, minute: fromMinute });
     const toDate = this.date!.set({ hour: toHour, minute: toMinute });
     const interval = Interval.fromDateTimes(fromDate, toDate);
-    return new TimeTrackingEventNormalizedBuffer(this.buffer!, interval, Duration.fromObject({ seconds: 30 })); // TODO autoscale
+    const samplingIntervalSeconds = 30 * interval.length('minutes') / 10; // todo unify within methods (make an aux method)
+    const samplingIntervalDuration = Duration.fromObject({ seconds: samplingIntervalSeconds });
+
+    return new TimeTrackingEventNormalizedBuffer(this.buffer!, interval, samplingIntervalDuration);
   }
 }
 

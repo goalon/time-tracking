@@ -12,6 +12,10 @@ body {
   justify-content: space-between;
 }
 
+#title {
+  text-align: center;
+}
+
 #day-view {
   display: none;
 }
