@@ -11,9 +11,10 @@ import * as fs from 'fs/promises';
 import * as tar from 'tar';
 import { Dropbox, Error, files } from 'dropbox';
 import { DateTime } from 'luxon';
+import Helper from '../Helper';
 
 // Dropbox access token is not provided in git.
-import { accessToken } from './secret';
+import { accessToken } from './secret'; // todo fix token
 
 class TimeTrackingUploader {
   private dirPath: string;
@@ -42,21 +43,19 @@ class TimeTrackingUploader {
       ['data'],
     );
 
-    // todo check notifications texts
-
     const contents = await fs.readFile(inFilePath, null);
 
     await dropbox.filesUpload({ path: outFilePath, contents, mode: { '.tag': 'overwrite' } })
       .then((response: any) => {
         this.context.globalState.update('lastUploadTimestamp', DateTime.now());
         if (!auto) {
-          vscode.window.showInformationMessage("Upload successful");
+          Helper.showNotification("Upload successful");
         }
       })
       .catch((uploadErr: Error<files.UploadError>) => {
         console.error(uploadErr);
         if (!auto) {
-          vscode.window.showErrorMessage("Upload failed");
+          Helper.showNotification("Upload failed", true);
         }
       });
   }

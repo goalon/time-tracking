@@ -12,19 +12,24 @@ import {
   SAMPLING_INTERVAL_SECONDS,
   DEFAULT_TIME_SPAN_MINUTES,
   AUTOUPLOAD_INTERVAL_HOURS,
-  MANUAL_UPLOAD_INTERVAL_HOURS
+  MANUAL_UPLOAD_INTERVAL_HOURS,
+  ID_LABEL,
 } from './config';
 import TimeTrackingEventNormalizedBuffer from './TimeTrackingEventBuffer/TimeTrackingEventNormalizedBuffer';
 
 class Helper {
+  static getSamplingIntervalSeconds(timeSpanMinutes: number) {
+    return SAMPLING_INTERVAL_SECONDS * timeSpanMinutes / DEFAULT_TIME_SPAN_MINUTES;
+  }
+
   static getNormalizedBuffer(interval: Interval, buffer: TimeTrackingEvent[]) {
-    const samplingIntervalSeconds = SAMPLING_INTERVAL_SECONDS * interval.length('minutes') / DEFAULT_TIME_SPAN_MINUTES;
+    const samplingIntervalSeconds = this.getSamplingIntervalSeconds(interval.length('minutes'));
     const samplingIntervalDuration = Duration.fromObject({ seconds: samplingIntervalSeconds });
     return new TimeTrackingEventNormalizedBuffer(buffer, interval, samplingIntervalDuration);
   }
 
   static checkUploadInterval(context: vscode.ExtensionContext, auto: boolean = true): boolean {
-    const lastUploadTimestamp: string = context.globalState.get('lastUploadTimestamp') || '';
+    const lastUploadTimestamp: string | undefined = context.globalState.get('lastUploadTimestamp');
     if (!lastUploadTimestamp) {
       return true;
     }
@@ -33,10 +38,7 @@ class Helper {
     const hoursInterval = auto ? AUTOUPLOAD_INTERVAL_HOURS : MANUAL_UPLOAD_INTERVAL_HOURS;
     if (DateTime.now().diff(lastUploadDateTime).hours < hoursInterval) {
       if (!auto) {
-        vscode.window.showErrorMessage(
-          "Upload unavailable",
-          `Last upload took place less than ${MANUAL_UPLOAD_INTERVAL_HOURS} hours ago.`
-        );
+        this.showNotification(`Upload unavailable. Last upload took place less than ${MANUAL_UPLOAD_INTERVAL_HOURS} hours ago.`);
       }
       return false;
     }
@@ -58,6 +60,16 @@ class Helper {
     const lastUploadTimestamp = this.getTimestampWithoutOffset(context, 'lastUploadTimestamp');
 
     return { lastSaveTimestamp, lastUploadTimestamp };
+  }
+
+  static showNotification(message: string, isError: boolean = false) {
+    const messageExt = `${ID_LABEL} ${message}`;
+
+    if (isError) {
+      vscode.window.showErrorMessage(messageExt);
+    } else {
+      vscode.window.showInformationMessage(messageExt);
+    }
   }
 }
 

@@ -100,7 +100,7 @@ class TimeTrackingEventsParser {
     this.totalBuffer = totalBuffer;
     this.languagesBuffer = languagesBuffer;
     this.dateTimeLabels = dateTimeLabels;
-    this.selectedLanguage = selectedLanguage;
+    this.selectedLanguage = selectedLanguage; // This feature is unavailable in the current version.
   }
 
   get buffer() {

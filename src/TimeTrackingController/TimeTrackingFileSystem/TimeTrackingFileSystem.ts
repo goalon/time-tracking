@@ -12,6 +12,7 @@ import TimeTrackingEventsGrouper from './TimeTrackingEventsGrouper';
 import TimeTrackingEventsSaver from './TimeTrackingEventsSaver';
 import TimeTrackingFileSystemHelper from './TimeTrackingFileSystemHelper';
 import TimeTrackingUploader from '../commands/TimeTrackingUploader';
+import Helper from '../Helper';
 
 class TimeTrackingFileSystem {
   private context: vscode.ExtensionContext;
@@ -32,7 +33,7 @@ class TimeTrackingFileSystem {
     await Promise.all(savePromises);
 
     if (!auto) {
-      vscode.window.showInformationMessage("Save successful");
+      Helper.showNotification("Save successful");
     }
     this.context.globalState.update('lastSaveTimestamp', newSaveDateTime.toISO());
   }

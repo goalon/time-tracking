@@ -29,7 +29,7 @@ class TimeTrackingController {
   private saveOnInterval(): vscode.Disposable {
     const saveInterval = setInterval(
       async () => await this.buffer.save(),
-      AUTOSAVE_SECONDS * 1000, // todo unify times with variables
+      AUTOSAVE_SECONDS * 1000,
     );
 
     return new vscode.Disposable(() => {

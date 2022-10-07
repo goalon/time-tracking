@@ -2,7 +2,7 @@
   "name": "time-tracking",
   "displayName": "Time Tracking",
   "description": "Tracking programmers' time",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.61.0"
   },
@@ -17,17 +17,17 @@
     "commands": [
       {
         "command": "timeTracking.open",
-        "title": "Open Time Tracking",
+        "title": "[MIMUW-MB-TT] Open Time Tracking dashboard",
         "when": "timeTracking.showCommand"
       },
       {
         "command": "timeTracking.dump",
-        "title": "Dump Time Tracking data to a file",
+        "title": "[MIMUW-MB-TT] Save Time Tracking data",
         "when": "inDebugMode && timeTracking.showCommand"
       },
       {
         "command": "timeTracking.upload",
-        "title": "Upload Time Tracking data for an analysis",
+        "title": "[MIMUW-MB-TT] Upload Time Tracking data",
         "when": "inDebugMode && timeTracking.showCommand"
       }
     ]

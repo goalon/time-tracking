@@ -11,3 +11,4 @@ export const AUTOSAVE_SECONDS = 60 * 60; // 1 hour
 export const AUTOUPLOAD_CHECK_SECONDS = 2 * 60 * 60; // 2 hours
 export const MANUAL_UPLOAD_INTERVAL_HOURS = 2;
 export const AUTOUPLOAD_INTERVAL_HOURS = 24;
+export const ID_LABEL = "[MIMUW-MB-TT]";

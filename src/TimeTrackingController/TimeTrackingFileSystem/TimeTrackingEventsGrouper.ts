@@ -21,7 +21,7 @@ class TimeTrackingEventsGrouper {
   }
 
   private filterNew(events: TimeTrackingEvent[]): TimeTrackingEvent[] {
-    const lastSaveTimestamp: string = this.context.globalState.get('lastSaveTimestamp') || '';
+    const lastSaveTimestamp: string | undefined = this.context.globalState.get('lastSaveTimestamp');
     if (!lastSaveTimestamp) {
       return events;
     }

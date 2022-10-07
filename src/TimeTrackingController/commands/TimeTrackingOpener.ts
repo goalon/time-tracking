@@ -12,6 +12,7 @@ import TimeTrackingEventBuffer from '../TimeTrackingEventBuffer';
 import TimeTrackingWebview from '../TimeTrackingWebview';
 import TimeTrackingEventStaticBuffer from '../TimeTrackingEventStaticBuffer';
 import Helper from '../Helper';
+import { SAMPLING_INTERVAL_SECONDS, DEFAULT_TIME_SPAN_MINUTES } from '../config';
 
 enum WebviewActionName {
   loadLiveData = 'loadLiveData',
@@ -65,12 +66,12 @@ class TimeTrackingOpener {
 
     const webview = new TimeTrackingWebview(this.context, this.panel);
     this.panel.webview.html = webview.content;
-    const refreshWebview = (timeSpanMinutes: number = 10) => () => {
+    const refreshWebview = (timeSpanMinutes: number = DEFAULT_TIME_SPAN_MINUTES) => () => {
       this.panel!.webview.postMessage({ action: WebviewActionName.loadLiveData, data: this.buffer.getDataForPlot(timeSpanMinutes) });
     };
     refreshWebview()();
 
-    let webviewRefreshInterval = setInterval(refreshWebview(), 30 * 1000); // todo check time
+    let webviewRefreshInterval = setInterval(refreshWebview(), SAMPLING_INTERVAL_SECONDS * 1000);
     const staticBuffer = new TimeTrackingEventStaticBuffer(this.context);
 
     this.panel.webview.onDidReceiveMessage(
@@ -83,18 +84,22 @@ class TimeTrackingOpener {
               this.panel!.webview.postMessage({ action: WebviewActionName.loadDayData, data: normalizedBuffer });
             } catch (error) {
               if (error instanceof vscode.FileSystemError) {
-                vscode.window.showErrorMessage("Data file not found");
+                Helper.showNotification("Data file not found", true);
               } else {
                 console.error(error);
-                vscode.window.showErrorMessage("Unknown error");
+                Helper.showNotification("Unknown error", true);
               }
-              this.panel!.webview.postMessage({ action: WebviewActionName.loadDayData, error: true }); // todo check
+              this.panel!.webview.postMessage({ action: WebviewActionName.loadDayData, error: true });
             }
             break;
           case WebviewActionName.changeTimeSpan:
+            const { timeSpanMinutes } = message.data;
             clearInterval(webviewRefreshInterval);
-            refreshWebview(message.data.timeSpanMinutes)();
-            webviewRefreshInterval = setInterval(refreshWebview(message.data.timeSpanMinutes), 30 * 1000); // todo dynamic refresh time
+            refreshWebview(timeSpanMinutes)();
+            webviewRefreshInterval = setInterval(
+              refreshWebview(timeSpanMinutes),
+              Helper.getSamplingIntervalSeconds(timeSpanMinutes) * 1000,
+            );
             break;
           case WebviewActionName.save:
             await this.buffer.save(false);
