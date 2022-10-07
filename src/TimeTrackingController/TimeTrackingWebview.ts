@@ -8,7 +8,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as nunjucks from 'nunjucks';
-import { DateTime } from 'luxon';
+import Helper from './Helper';
 
 // The way of loading node modules is inspired by
 // https://github.com/microsoft/vscode-extension-samples/blob/main/webview-codicons-sample/src/extension.ts.
@@ -16,19 +16,12 @@ class TimeTrackingWebview {
 	readonly content: string;
 
 	constructor(context: vscode.ExtensionContext, panel: vscode.WebviewPanel) {
+		const { cspSource } = panel.webview;
 		const { extensionPath } = context;
 		const userId = context.globalState.get('userId') || '';
-		const lastSaveTimestampRaw: string = context.globalState.get('lastSaveTimestamp') || '';
-		const lastSaveTimestamp = lastSaveTimestampRaw ?
-			DateTime.fromISO(lastSaveTimestampRaw).toISO({ includeOffset: false }) :
-			'';
-		const lastUploadTimestampRaw: string = context.globalState.get('lastUploadTimestamp') || '';
-		const lastUploadTimestamp = lastUploadTimestampRaw ?
-			DateTime.fromISO(lastUploadTimestampRaw).toISO({ includeOffset: false }) :
-			'';
-
-		const localPathBase = path.join(extensionPath, 'src', 'TimeTrackingController', 'TimeTrackingWebview');
-		const getLocalPath = (...targetPath: string[]) => path.join(localPathBase, ...targetPath);
+		
+		const staticPathBase = path.join(extensionPath, 'static');
+		const getStaticPath = (...targetPath: string[]) => path.join(staticPathBase, ...targetPath);
 		const nodeModulesPathBase = path.join(extensionPath, 'node_modules');
 		const getNodeModulesPath = (...targetPath: string[]) => path.join(nodeModulesPathBase, ...targetPath);
 
@@ -47,13 +40,14 @@ class TimeTrackingWebview {
 		const codiconsStyleSrcPath = getNodeModulesPath('@vscode/codicons', 'dist', 'codicon.css');
 		const codiconsStyleSrc = TimeTrackingWebview.getTargetUri(codiconsStyleSrcPath, panel);
 
-		const styleSrcPath = getLocalPath('style.css');
+		const styleSrcPath = getStaticPath('style.css');
 		const styleSrc = TimeTrackingWebview.getTargetUri(styleSrcPath, panel);
-		const scriptSrcPath = getLocalPath('script.js');
+		const scriptSrcPath = getStaticPath('script.js');
 		const scriptSrc = TimeTrackingWebview.getTargetUri(scriptSrcPath, panel);
 		
-		const templatePath = getLocalPath('content.njk');
+		const templatePath = getStaticPath('content.njk');
 		const templateVariables = {
+			cspSource,
 			chartSrc,
 			luxonSrc,
 			chartAdapterLuxonSrc,
@@ -63,8 +57,7 @@ class TimeTrackingWebview {
 			styleSrc,
 			scriptSrc,
 			userId,
-			lastSaveTimestamp,
-			lastUploadTimestamp,
+			...Helper.getTimestampMetadata(context),
 		};
 		
 		this.content = nunjucks.render(templatePath, templateVariables);

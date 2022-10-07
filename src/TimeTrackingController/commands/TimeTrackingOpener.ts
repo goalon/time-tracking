@@ -9,14 +9,17 @@ import * as vscode from 'vscode';
 import { DateTime } from 'luxon';
 import * as path from 'path';
 import TimeTrackingEventBuffer from '../TimeTrackingEventBuffer';
-import TimeTrackingWebview from '../TimeTrackingWebview/TimeTrackingWebview';
+import TimeTrackingWebview from '../TimeTrackingWebview';
 import TimeTrackingEventStaticBuffer from '../TimeTrackingEventStaticBuffer';
+import Helper from '../Helper';
 
 enum WebviewActionName {
   loadLiveData = 'loadLiveData',
   loadDayData = 'loadDayData',
   save = 'save',
   upload = 'upload',
+  saveEnd = 'saveEnd',
+  uploadEnd = 'uploadEnd',
   refreshMetadata = 'refreshMetadata',
   changeTimeSpan = 'changeTimeSpan',
   changeTimeBoundaries = 'changeTimeBoundaries',
@@ -25,14 +28,21 @@ enum WebviewActionName {
 class TimeTrackingOpener {
   static readonly id: string = 'timeTracking.open';
 
-  context: vscode.ExtensionContext;
-  buffer: TimeTrackingEventBuffer;
-  panel: vscode.WebviewPanel | null;
+  private context: vscode.ExtensionContext;
+  private buffer: TimeTrackingEventBuffer;
+  private panel: vscode.WebviewPanel | null;
 
   constructor(context: vscode.ExtensionContext, buffer: TimeTrackingEventBuffer) {
     this.context = context;
     this.buffer = buffer;
     this.panel = null;
+  }
+
+  private refreshMetadata() {
+    this.panel!.webview.postMessage({
+      action: WebviewActionName.refreshMetadata,
+      data: Helper.getTimestampMetadata(this.context),
+    });
   }
 
   run() {
@@ -48,7 +58,6 @@ class TimeTrackingOpener {
       vscode.ViewColumn.Beside,
       {
         enableScripts: true,
-        enableCommandUris: true,
         retainContextWhenHidden: true,
         localResourceRoots: this.getLocalResourceRoots(),
       },
@@ -61,7 +70,7 @@ class TimeTrackingOpener {
     };
     refreshWebview()();
 
-    let webviewRefreshInterval = setInterval(refreshWebview(), 30 * 1000);
+    let webviewRefreshInterval = setInterval(refreshWebview(), 30 * 1000); // todo check time
     const staticBuffer = new TimeTrackingEventStaticBuffer(this.context);
 
     this.panel.webview.onDidReceiveMessage(
@@ -88,24 +97,17 @@ class TimeTrackingOpener {
             webviewRefreshInterval = setInterval(refreshWebview(message.data.timeSpanMinutes), 30 * 1000); // todo dynamic refresh time
             break;
           case WebviewActionName.save:
-            await this.buffer.save();
-            this.panel!.webview.postMessage({
-              action: WebviewActionName.refreshMetadata,
-              data: this.getMetadata(),
-            }); // todo unify
+            await this.buffer.save(false);
+            this.refreshMetadata();
+            this.panel!.webview.postMessage({ action: WebviewActionName.saveEnd });
             break;
           case WebviewActionName.upload:
-            await this.buffer.upload();
-            this.panel!.webview.postMessage({
-              action: WebviewActionName.refreshMetadata,
-              data: this.getMetadata(),
-            }); // todo unify
+            await this.buffer.upload(false);
+            this.refreshMetadata();
+            this.panel!.webview.postMessage({ action: WebviewActionName.uploadEnd });
             break;
           case WebviewActionName.refreshMetadata:
-            this.panel!.webview.postMessage({
-              action: WebviewActionName.refreshMetadata,
-              data: this.getMetadata(),
-            });
+            this.refreshMetadata();
             break;
           case WebviewActionName.changeTimeBoundaries:
             const { fromTime, toTime } = message.data;
@@ -131,27 +133,12 @@ class TimeTrackingOpener {
   }
 
   private getLocalResourceRoots(): vscode.Uri[] {
-    const localResourcesPath = path.join(this.context.extensionPath, 'src', 'TimeTrackingController', 'TimeTrackingWebview');
-    const localResourcesUri = vscode.Uri.file(localResourcesPath);
+    const staticResourcesPath = path.join(this.context.extensionPath, 'static');
+    const staticResourcesUri = vscode.Uri.file(staticResourcesPath);
     const nodeModulesPath = path.join(this.context.extensionPath, 'node_modules');
 		const nodeModulesUri = vscode.Uri.file(nodeModulesPath);
   
-    return [localResourcesUri, nodeModulesUri];
-  }
-
-  private getMetadata() {
-    // todo move elsewhere and unify two
-    // todo njk when dates empty
-    const lastSaveTimestampRaw: string = this.context.globalState.get('lastSaveTimestamp') || '';
-		const lastSaveTimestamp = lastSaveTimestampRaw ?
-			DateTime.fromISO(lastSaveTimestampRaw).toISO({ includeOffset: false }) :
-			'';
-		const lastUploadTimestampRaw: string = this.context.globalState.get('lastUploadTimestamp') || '';
-		const lastUploadTimestamp = lastUploadTimestampRaw ?
-			DateTime.fromISO(lastUploadTimestampRaw).toISO({ includeOffset: false }) :
-			'';
-
-    return { lastSaveTimestamp, lastUploadTimestamp };
+    return [staticResourcesUri, nodeModulesUri];
   }
 }
 

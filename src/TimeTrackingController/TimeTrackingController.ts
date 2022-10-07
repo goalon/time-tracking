@@ -7,20 +7,18 @@
 
 import * as vscode from 'vscode';
 import * as uuid from 'uuid';
-import { DateTime } from 'luxon';
 import TimeTrackingEventBuffer from './TimeTrackingEventBuffer';
 import { TimeTrackingOpener, TimeTrackingUploader } from './commands/commands';
+import { AUTOSAVE_SECONDS, AUTOUPLOAD_CHECK_SECONDS } from './config';
+import Helper from './Helper';
 
 class TimeTrackingController {
   private context: vscode.ExtensionContext;
   private buffer: TimeTrackingEventBuffer;
 
-  // todo lookup and check private
-
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
 
-    // TODO Move elsewhere
     if (!context.globalState.get('userId')) {
         context.globalState.update('userId', uuid.v4());
     }
@@ -30,25 +28,25 @@ class TimeTrackingController {
 
   private saveOnInterval(): vscode.Disposable {
     const saveInterval = setInterval(
-      async () => {
-        await this.buffer.save();
-      },
-      60 * 60 * 1000, // todo unify times with variables
+      async () => await this.buffer.save(),
+      AUTOSAVE_SECONDS * 1000, // todo unify times with variables
     );
-
-    // todo fix ui
 
     return new vscode.Disposable(() => {
       clearInterval(saveInterval);
     });
   }
 
+  private async autoUploadWithCheck() {
+    if (Helper.checkUploadInterval(this.context)) {
+      await this.buffer.upload();
+    }
+  }
+
   private uploadOnInterval(): vscode.Disposable {
     const uploadInterval = setInterval(
-      async () => {
-        await this.buffer.upload();
-      },
-      2 * 60 * 60 * 1000,
+      async () => this.autoUploadWithCheck(),
+      AUTOUPLOAD_CHECK_SECONDS * 1000,
     );
 
     return new vscode.Disposable(() => {
@@ -69,19 +67,12 @@ class TimeTrackingController {
     
     const openerDisposable = vscode.commands.registerCommand(TimeTrackingOpener.id, () => timeTrackingOpener.run());
     const dumperDisposable = vscode.commands.registerCommand('timeTracking.dump', async () => {
-      await this.buffer.save();
+      await this.buffer.save(false);
     });
     const uploaderDisposable = vscode.commands.registerCommand(TimeTrackingUploader.id, async () => {
-      const lastUploadTimestamp: string = this.context.globalState.get('lastUploadTimestamp') || '';
-      if (lastUploadTimestamp) {
-        const lastUploadDateTime = DateTime.fromISO(lastUploadTimestamp);
-        if (DateTime.now().diff(lastUploadDateTime).hours < 2) {
-          vscode.window.showErrorMessage("Upload unavailable", "Last upload took place less than 2 hours ago."); // todo check
-          return;
-        }
+      if (Helper.checkUploadInterval(this.context, false)) {
+        await this.buffer.upload(false);
       }
-
-      await this.buffer.upload();
     });
     const saveOnIntervalDisposable = this.saveOnInterval();
     const uploadOnIntervalDisposable = this.uploadOnInterval();
@@ -96,15 +87,7 @@ class TimeTrackingController {
       uploaderDisposable,
     );
 
-    const lastUploadTimestamp: string = this.context.globalState.get('lastUploadTimestamp') || '';
-    if (!lastUploadTimestamp) {
-      await this.buffer.upload();
-    } else {
-      const lastUploadDateTime = DateTime.fromISO(lastUploadTimestamp);
-      if (DateTime.now().diff(lastUploadDateTime).hours > 8) {
-        await this.buffer.upload(); // todo unify
-      }
-    }
+    await this.autoUploadWithCheck();
   }
 
   async deactivate() {

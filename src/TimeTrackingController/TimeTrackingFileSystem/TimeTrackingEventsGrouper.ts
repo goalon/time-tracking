@@ -14,7 +14,7 @@ type TimeTrackingEventsGrouped = { [dayPath: string]: TimeTrackingEvent[] };
 
 // An interval spanning 2 days is placed in the file associated with the starting day.
 class TimeTrackingEventsGrouper {
-  context: vscode.ExtensionContext;
+  private context: vscode.ExtensionContext;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;

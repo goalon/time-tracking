@@ -79,11 +79,16 @@ class TimeTrackingWebviewConstants {
     this.calendarViewElem = document.getElementById('calendar-view');
     this.liveViewButton = document.getElementById('live-view-button');
     this.calendarViewButton = document.getElementById('calendar-view-button');
+    this.timeSpanSelect = document.getElementById('time-span');
     this.fromTimeInput = document.getElementById('from-time');
     this.toTimeInput = document.getElementById('to-time');
+    this.changeTimeBoundariesButton = document.getElementById('change-time-boundaries-button');
     this.titleElem = document.getElementById('title');
     this.lastSaveInput = document.getElementById('last-save');
     this.lastUploadInput = document.getElementById('last-upload');
+    this.refreshMetadataButton = document.getElementById('refresh-metadata-button');
+    this.saveButton = document.getElementById('save-button');
+    this.uploadButton = document.getElementById('upload-button');
 
     this.liveViewElem.style.display = 'block';
     this.calendarViewElem.style.display = 'none';
@@ -108,6 +113,8 @@ const WEBVIEW_ACTION_NAME = {
   loadDayData: 'loadDayData',
   save: 'save',
   upload: 'upload',
+  saveEnd: 'saveEnd',
+  uploadEnd: 'uploadEnd',
   refreshMetadata: 'refreshMetadata',
   changeTimeSpan: 'changeTimeSpan',
   changeTimeBoundaries: 'changeTimeBoundaries',
@@ -122,32 +129,53 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
     this.calendar = null;
     this.liveEventsParser = null;
 
-    window.addEventListener('message', event => {
-      switch (event.data.action) {
-        case WEBVIEW_ACTION_NAME.loadLiveData:
-          this.loadLiveData(event.data.data);
-          break;
-        case WEBVIEW_ACTION_NAME.loadDayData:
-          if (!event.data.error) {
-            this.loadDayData(event.data.data);
-          }
-          break;
-        case WEBVIEW_ACTION_NAME.changeTimeBoundaries:
-          this.reloadDayData(event.data.data);
-          break;
-        case WEBVIEW_ACTION_NAME.refreshMetadata:
-          const { lastSaveTimestamp, lastUploadTimestamp } = event.data.data;
-          if (lastSaveTimestamp) {
-            this.lastSaveInput.value = lastSaveTimestamp;
-          }
-          if (lastUploadTimestamp) {
-            this.lastUploadInput.value = lastUploadTimestamp;
-          }
-          break;
-        default:
-          console.error(`Unrecognized event action: ${event.data.action}`);
-      }
-    });
+    this.connectEventHandlers();
+
+    window.addEventListener('message', event => this.handleWebviewAction(event));
+  }
+
+  // It removes the need to use inline scripts for the current CSP.
+  connectEventHandlers() {
+    this.calendarViewButton.onclick = () => this.switchToCalendarView();
+    this.liveViewButton.onclick = () => this.switchToLiveView();
+    this.saveButton.onclick = () => this.save();
+    this.uploadButton.onclick = () => this.upload();
+    this.timeSpanSelect.onchange = (event) => this.changeTimeSpan(event);
+    this.changeTimeBoundariesButton.onclick = () => this.changeTimeBoundaries();
+    this.refreshMetadataButton.onclick = () => this.refreshMetadata();
+  }
+
+  handleWebviewAction(event) {
+    switch (event.data.action) {
+      case WEBVIEW_ACTION_NAME.loadLiveData:
+        this.loadLiveData(event.data.data);
+        break;
+      case WEBVIEW_ACTION_NAME.loadDayData:
+        if (!event.data.error) {
+          this.loadDayData(event.data.data);
+        }
+        break;
+      case WEBVIEW_ACTION_NAME.changeTimeBoundaries:
+        this.reloadDayData(event.data.data);
+        break;
+      case WEBVIEW_ACTION_NAME.refreshMetadata:
+        const { lastSaveTimestamp, lastUploadTimestamp } = event.data.data;
+        if (lastSaveTimestamp) {
+          this.lastSaveInput.value = lastSaveTimestamp;
+        }
+        if (lastUploadTimestamp) {
+          this.lastUploadInput.value = lastUploadTimestamp;
+        }
+        break;
+      case WEBVIEW_ACTION_NAME.saveEnd:
+        this.saveButton.disabled = false;
+        break;
+      case WEBVIEW_ACTION_NAME.uploadEnd:
+        this.uploadButton.disabled = false;
+        break;
+      default:
+        console.error(`Unrecognized event action: ${event.data.action}`);
+    }
   }
 
   loadLiveData({ totalBuffer, languagesBuffer, dateTimeLabels }) {
@@ -263,15 +291,18 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
     this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.loadDayData, data: { date: this.selectedDate } });
   };
 
-  changeTimeSpan(timeSpanMinutes) {
+  changeTimeSpan(event) {
+    const timeSpanMinutes = event.target.value;
     this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.changeTimeSpan, data: { timeSpanMinutes } });
   };
 
   save() {
+    this.saveButton.disabled = true;
     this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.save });
   };
 
   upload() {
+    this.uploadButton.disabled = true;
     this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.upload });
   };
   
@@ -286,3 +317,8 @@ class TimeTrackingWebviewHelper extends TimeTrackingWebviewConstants {
     this.vscode.postMessage({ action: WEBVIEW_ACTION_NAME.changeTimeBoundaries, data });
   }
 }
+
+let helper;
+window.addEventListener('DOMContentLoaded', (event) => {
+  new TimeTrackingWebviewHelper();
+});

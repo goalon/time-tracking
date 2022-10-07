@@ -28,7 +28,7 @@ class TimeTrackingUploader {
 
   static readonly id: string = 'timeTracking.upload';
 
-  async run() {
+  async run(auto: boolean = true) {
     const inFilePath = path.join(this.dirPath, `${this.userId}.tgz`);
     const outFilePath = `/${this.userId}.tgz`;
     const dropbox = new Dropbox({ accessToken });
@@ -42,16 +42,22 @@ class TimeTrackingUploader {
       ['data'],
     );
 
-    // TODO Unify the code. Provide the notifications for successes and errors.
-    // TODO block uploading more than once per 2 hours
+    // todo check notifications texts
+
     const contents = await fs.readFile(inFilePath, null);
 
     await dropbox.filesUpload({ path: outFilePath, contents, mode: { '.tag': 'overwrite' } })
       .then((response: any) => {
         this.context.globalState.update('lastUploadTimestamp', DateTime.now());
+        if (!auto) {
+          vscode.window.showInformationMessage("Upload successful");
+        }
       })
       .catch((uploadErr: Error<files.UploadError>) => {
         console.error(uploadErr);
+        if (!auto) {
+          vscode.window.showErrorMessage("Upload failed");
+        }
       });
   }
 }

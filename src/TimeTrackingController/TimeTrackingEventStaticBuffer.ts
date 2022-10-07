@@ -6,15 +6,15 @@
  */
 
 import * as vscode from 'vscode';
-import { DateTime, Interval, Duration } from 'luxon';
+import { DateTime, Interval } from 'luxon';
 import TimeTrackingFileSystem from './TimeTrackingFileSystem/TimeTrackingFileSystem';
-import TimeTrackingEventNormalizedBuffer from './TimeTrackingEventBuffer/TimeTrackingEventNormalizedBuffer';
 import TimeTrackingEvent from './TimeTrackingEvent';
+import Helper from './Helper';
 
 class TimeTrackingEventStaticBuffer {
-  fileSystem: TimeTrackingFileSystem;
-  date?: DateTime;
-  buffer?: TimeTrackingEvent[];
+  private fileSystem: TimeTrackingFileSystem;
+  private date?: DateTime;
+  private buffer?: TimeTrackingEvent[];
 
   constructor(context: vscode.ExtensionContext) {
     this.fileSystem = new TimeTrackingFileSystem(context);
@@ -24,22 +24,19 @@ class TimeTrackingEventStaticBuffer {
     this.date = date;
     this.buffer = await this.fileSystem.read(date);
     const interval = Interval.after(date, { days: 1 });
-    const samplingIntervalSeconds = 30 * interval.length('minutes') / 10; // todo unify constants (config)
-    const samplingIntervalDuration = Duration.fromObject({ seconds: samplingIntervalSeconds });
+    return Helper.getNormalizedBuffer(interval, this.buffer);
+  }
 
-    return new TimeTrackingEventNormalizedBuffer(this.buffer, interval, samplingIntervalDuration);
+  private timeStrToDateTime(timeStr: string): DateTime {
+    const [hour, minute] = timeStr.split(':').map((ts) => parseInt(ts));
+    return this.date!.set({ hour, minute });
   }
 
   changeTimeBoundaries(from: string, to: string) {
-    const [fromHour, fromMinute] = from.split(':').map((s) => parseInt(s));
-    const [toHour, toMinute] = to.split(':').map((s) => parseInt(s));
-    const fromDate = this.date!.set({ hour: fromHour, minute: fromMinute });
-    const toDate = this.date!.set({ hour: toHour, minute: toMinute });
+    const fromDate = this.timeStrToDateTime(from);
+    const toDate = this.timeStrToDateTime(to);
     const interval = Interval.fromDateTimes(fromDate, toDate);
-    const samplingIntervalSeconds = 30 * interval.length('minutes') / 10; // todo unify within methods (make an aux method)
-    const samplingIntervalDuration = Duration.fromObject({ seconds: samplingIntervalSeconds });
-
-    return new TimeTrackingEventNormalizedBuffer(this.buffer!, interval, samplingIntervalDuration);
+    return Helper.getNormalizedBuffer(interval, this.buffer!);
   }
 }
 

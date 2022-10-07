@@ -14,13 +14,13 @@ import TimeTrackingFileSystemHelper from './TimeTrackingFileSystemHelper';
 import TimeTrackingUploader from '../commands/TimeTrackingUploader';
 
 class TimeTrackingFileSystem {
-  context: vscode.ExtensionContext;
+  private context: vscode.ExtensionContext;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
   }
 
-  async save(buffer: TimeTrackingEvent[]): Promise<void> {
+  async save(buffer: TimeTrackingEvent[], auto: boolean = true): Promise<void> {
     const newSaveDateTime = DateTime.now();
     const grouper = new TimeTrackingEventsGrouper(this.context);
     const groupedEvents = grouper.run(buffer);
@@ -30,6 +30,10 @@ class TimeTrackingFileSystem {
       return acc;
     }, []);
     await Promise.all(savePromises);
+
+    if (!auto) {
+      vscode.window.showInformationMessage("Save successful");
+    }
     this.context.globalState.update('lastSaveTimestamp', newSaveDateTime.toISO());
   }
 
@@ -41,9 +45,9 @@ class TimeTrackingFileSystem {
     return data;
   }
 
-  async upload(): Promise<void> {
+  async upload(auto: boolean = true): Promise<void> {
     const uploader = new TimeTrackingUploader(this.context);
-    await uploader.run();
+    await uploader.run(auto);
   }
 }
 

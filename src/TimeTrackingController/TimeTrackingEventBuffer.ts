@@ -9,27 +9,25 @@ import * as vscode from 'vscode';
 import { DateTime, Duration, Interval } from 'luxon';
 import TimeTrackingEvent from './TimeTrackingEvent';
 import TimeTrackingFileSystem from './TimeTrackingFileSystem/TimeTrackingFileSystem';
-import TimeTrackingEventNormalizedBuffer from './TimeTrackingEventBuffer/TimeTrackingEventNormalizedBuffer';
-
-const SAMPLING_INTERVAL_LENGTH = 30;
-const DEFAULT_TIME_SPAN_MINUTES = 10;
+import { DEFAULT_TIME_SPAN_MINUTES, SAMPLING_INTERVAL_SECONDS } from './config';
+import Helper from './Helper';
 
 class TimeTrackingEventBuffer {
-  liveBuffer: TimeTrackingEvent[];
-  fileSystem: TimeTrackingFileSystem;
+  private liveBuffer: TimeTrackingEvent[];
+  private fileSystem: TimeTrackingFileSystem;
 
   constructor(context: vscode.ExtensionContext) {
     this.liveBuffer = [new TimeTrackingEvent()];
     this.fileSystem = new TimeTrackingFileSystem(context);
   }
 
-  get lastEvent(): TimeTrackingEvent {
+  private get lastEvent(): TimeTrackingEvent {
     return this.liveBuffer[this.liveBuffer.length - 1];
   }
 
   push(event: vscode.TextDocumentChangeEvent) {
     const now = DateTime.now();
-    const samplingIntervalDuration = Duration.fromObject({ seconds: SAMPLING_INTERVAL_LENGTH });
+    const samplingIntervalDuration = Duration.fromObject({ seconds: SAMPLING_INTERVAL_SECONDS });
     if (now.diff(this.lastEvent.interval.start) > samplingIntervalDuration) {
       this.liveBuffer.push(new TimeTrackingEvent(now));
     } else {
@@ -40,23 +38,23 @@ class TimeTrackingEventBuffer {
   }
 
   getDataForPlot(timeSpanMinutes: number = DEFAULT_TIME_SPAN_MINUTES) {
-    const interval = Interval.before(DateTime.now(), Duration.fromObject({ minutes: timeSpanMinutes }));
-    const samplingIntervalSeconds = SAMPLING_INTERVAL_LENGTH * timeSpanMinutes / DEFAULT_TIME_SPAN_MINUTES;
-    const samplingIntervalDuration = Duration.fromObject({ seconds: samplingIntervalSeconds });
-    const normalizedBuffer = new TimeTrackingEventNormalizedBuffer(this.liveBuffer, interval, samplingIntervalDuration);
-    return normalizedBuffer;
+    const interval = Interval.before(DateTime.now(), { minutes: timeSpanMinutes });
+    return Helper.getNormalizedBuffer(interval, this.liveBuffer);
   }
 
-  async save() {
-    await this.fileSystem.save(this.liveBuffer);
+  async save(auto: boolean = true) {
+    await this.fileSystem.save(this.liveBuffer, auto);
     this.filterLastHour();
   }
 
-  async upload() {
-    await this.fileSystem.upload();
+  // The convention of uploading is made similar to saving,
+  // nevertheless it's questionable in the current state.
+  // It would probably make more sense if the app was further extended.
+  async upload(auto: boolean = true) {
+    await this.fileSystem.upload(auto);
   }
 
-  filterLastHour() {
+  private filterLastHour() {
     const hourAgoDateTime = DateTime.now().minus({ hours: 1 });
     this.liveBuffer = this.liveBuffer.filter((event) => !event.interval.isBefore(hourAgoDateTime));
   }

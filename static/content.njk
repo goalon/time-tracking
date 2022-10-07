@@ -7,6 +7,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src {{cspSource}}; style-src {{cspSource}}; font-src {{cspSource}} data:;"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Tracking</title>
     <script src="{{ chartSrc }}"></script>
@@ -25,13 +29,11 @@
           <button
             id="calendar-view-button"
             class="codicon codicon-calendar"
-            onclick="helper.switchToCalendarView()"
           >
           </button>
           <button
             id="live-view-button"
             class="codicon codicon-graph-line"
-            onclick="helper.switchToLiveView()"
           >
           </button>
         </div>
@@ -39,13 +41,11 @@
           <button
             id="save-button"
             class="codicon codicon-save"
-            onclick="helper.save()"
           >
           </button>
           <button
             id="upload-button"
             class="codicon codicon-cloud-upload"
-            onclick="helper.upload()"
           >
           </button>
         </div>
@@ -54,11 +54,10 @@
       <canvas id="chart"></canvas>
       <div id="live-view" class="view-controls">
         <label for="time-span">Show last</label>
-        {# todo fix #}
         <select id="time-span" required>
-          <option value="600" selected>10 minutes</option>
-          <option value="1800">30 minutes</option>
-          <option value="3600">1 hour</option>
+          <option value="10" selected>10 minutes</option>
+          <option value="30">30 minutes</option>
+          <option value="60">1 hour</option>
         </select>
       </div>
       <div id="day-view" class="view-controls">
@@ -66,7 +65,7 @@
         <input id="from-time" type="time" value="00:00">
         <label for="to-time">To:</label>
         <input id="to-time" type="time" value="23:59">
-        <button onclick="helper.changeTimeBoundaries()">
+        <button id="change-time-boundaries-button">
           Change time
           <i class="codicon codicon-check"></i>
         </button>
@@ -103,12 +102,8 @@
       <button
         id="refresh-metadata-button"
         class="codicon codicon-refresh"
-        onclick="helper.refreshMetadata()"
       >
       </button>
     </div>
-    <script>
-      const helper = new TimeTrackingWebviewHelper();
-    </script>
   </body>
 </html>
