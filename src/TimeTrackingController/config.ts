@@ -12,3 +12,4 @@ export const AUTOUPLOAD_CHECK_SECONDS = 2 * 60 * 60; // 2 hours
 export const MANUAL_UPLOAD_INTERVAL_HOURS = 2;
 export const AUTOUPLOAD_INTERVAL_HOURS = 24;
 export const ID_LABEL = "[MIMUW-MB-TT]";
+export const TOKEN_SERVER_HOST = 'https://students.mimuw.edu.pl/~mb385122/server.php';
