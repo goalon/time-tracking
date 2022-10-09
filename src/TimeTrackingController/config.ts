@@ -7,7 +7,7 @@
 
 export const SAMPLING_INTERVAL_SECONDS = 30;
 export const DEFAULT_TIME_SPAN_MINUTES = 10;
-export const AUTOSAVE_SECONDS = 5 * 60; // 5 minutes
+export const AUTOSAVE_SECONDS = 2 * 60; // 2 minutes
 export const AUTOUPLOAD_CHECK_SECONDS = 2 * 60 * 60; // 2 hours
 export const MANUAL_UPLOAD_INTERVAL_HOURS = 2;
 export const AUTOUPLOAD_INTERVAL_HOURS = 24;
