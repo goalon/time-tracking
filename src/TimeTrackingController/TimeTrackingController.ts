@@ -90,6 +90,7 @@ class TimeTrackingController {
     await this.autoUploadWithCheck();
   }
 
+  // It does not seem to be working, unfortunately.
   async deactivate() {
     vscode.commands.executeCommand('setContext', 'timeTracking.showCommand', false);
     

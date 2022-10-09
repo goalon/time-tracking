@@ -28,7 +28,7 @@ class TimeTrackingEventsSaver {
       const lastRawFileDataRecord = rawFileData[rawFileData.length - 1];
       const lastSavedEvent = TimeTrackingEvent.deserialize(lastRawFileDataRecord);
       if (lastSavedEvent.interval.start.equals(events[0].interval.start)) {
-        rawFileData = rawFileData.slice(1);
+        rawFileData = rawFileData.slice(0, -1);
         if (rawFileData.length === 0) {
           return this.prepareNewData(events);
         }
