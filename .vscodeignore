@@ -3,6 +3,7 @@
 out/test/**
 
 server.php
+docs/**
 src/**
 .gitignore
 .yarnrc
