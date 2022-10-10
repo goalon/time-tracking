@@ -20,7 +20,7 @@
     "url": "https://github.com/goalon/time-tracking/issues",
     "email": "m.bajorek2@student.uw.edu.pl"
   },
-  "icon": "https://github.com/goalon/time-tracking/blob/main/static/icon.png",
+  "icon": "static/icon.png",
   "galleryBanner": {
     "color": "#00008B",
     "theme": "dark"
