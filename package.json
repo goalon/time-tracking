@@ -5,7 +5,7 @@
   "repository": "github:goalon/time-tracking",
   "publisher": "MateuszBajorekMIMUW",
   "license": "SEE LICENSE IN LICENSE",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "engines": {
     "vscode": "^1.61.0"
   },

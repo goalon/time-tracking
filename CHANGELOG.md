@@ -15,3 +15,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 1.0.2
 
 - Limit uploading by the webview action
+
+## 1.0.3
+
+- Make the notification for limiting manual uploading as an error variant
