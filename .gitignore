@@ -4,5 +4,6 @@ server.php
 out
 dist
 node_modules
+.vscode/
 .vscode-test/
 *.vsix
