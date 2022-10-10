@@ -5,7 +5,7 @@ This VS Code plugin gathers data for the Master's thesis by Mateusz Bajorek. The
 ## Data type
 There is presented the data format of one aforementioned bucket. The data is saved in files in the `JSON Lines` format where each line with a `JSON` object relates to one bucket.
 
-![image info](./docs/data-type.png)
+![Data type structure](https://github.com/goalon/time-tracking/blob/main/docs/data-type.png)
 
 Let me describe each of the fields of the above structure:
 * `additions` say how many characters (chars) were added to the files opened in the editor within the time-frame determined by the fields start and end;
@@ -19,17 +19,19 @@ string literal `"null"`;
 
 ## Live view
 It is the first view visible after opening the dashboard. Hovering over a datapoint in the graph enables the user to view the number of additions/deletions which occured in the timespan between the chosen datapoint and the previous one.
-![image info](./docs/live-view.png)
+
+![Live view](https://github.com/goalon/time-tracking/blob/main/docs/live-view.png)
 
 ## Calendar view
 It is important to note that clicking on a day in the calendar opens the `day view` (if the data for the selected day exists).
-![image info](./docs/calendar-view.png)
+
+![Calendar view](https://github.com/goalon/time-tracking/blob/main/docs/calendar-view.png)
 
 ## Day view
-![image info](./docs/day-view.png)
+![Day view](https://github.com/goalon/time-tracking/blob/main/docs/day-view.png)
 
 ## Data flow overview
-![image info](./docs/coding-process-tracker.png)
+![Data flow overview](https://github.com/goalon/time-tracking/blob/main/docs/coding-process-tracker.png)
 
 ## Notable dependencies
 * [Luxon](https://moment.github.io/luxon/)
