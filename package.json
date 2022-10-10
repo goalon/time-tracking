@@ -3,6 +3,7 @@
   "displayName": "[MIMUW-MB-TT] Time Tracking",
   "description": "Tracking programmers' time and gathering data for the research",
   "repository": "github:goalon/time-tracking",
+  "publisher": "MateuszBajorekMIMUW",
   "license": "SEE LICENSE IN LICENSE",
   "version": "1.0.0",
   "engines": {
