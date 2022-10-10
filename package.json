@@ -1,7 +1,8 @@
 {
-  "name": "time-tracking",
-  "displayName": "Time Tracking",
-  "description": "Tracking programmers' time",
+  "name": "mimuw-mb-tt-time-tracking",
+  "displayName": "[MIMUW-MB-TT] Time Tracking",
+  "description": "Tracking programmers' time and gathering data for the research",
+  "repository": "github:goalon/time-tracking",
   "version": "1.0.0",
   "engines": {
     "vscode": "^1.61.0"
