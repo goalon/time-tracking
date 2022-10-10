@@ -107,8 +107,10 @@ class TimeTrackingOpener {
             this.panel!.webview.postMessage({ action: WebviewActionName.saveEnd });
             break;
           case WebviewActionName.upload:
-            await this.buffer.upload(false);
-            this.refreshMetadata();
+            if (Helper.checkUploadInterval(this.context, false)) {
+              await this.buffer.upload(false);
+              this.refreshMetadata();
+            }
             this.panel!.webview.postMessage({ action: WebviewActionName.uploadEnd });
             break;
           case WebviewActionName.refreshMetadata:
