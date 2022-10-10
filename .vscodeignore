@@ -4,6 +4,7 @@ out/test/**
 
 server.php
 docs/**
+static/icon.svg
 src/**
 .gitignore
 .yarnrc

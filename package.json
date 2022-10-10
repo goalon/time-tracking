@@ -3,13 +3,27 @@
   "displayName": "[MIMUW-MB-TT] Time Tracking",
   "description": "Tracking programmers' time and gathering data for the research",
   "repository": "github:goalon/time-tracking",
+  "license": "SEE LICENSE IN LICENSE",
   "version": "1.0.0",
   "engines": {
     "vscode": "^1.61.0"
   },
   "categories": [
+    "Visualization",
+    "Data Science",
+    "Programming Languages",
     "Other"
   ],
+  "homepage": "https://github.com/goalon/time-tracking",
+  "bugs": {
+    "url": "https://github.com/goalon/time-tracking/issues",
+    "email": "m.bajorek2@student.uw.edu.pl"
+  },
+  "icon": "https://github.com/goalon/time-tracking/blob/main/static/icon.png",
+  "galleryBanner": {
+    "color": "#00008B",
+    "theme": "dark"
+  },
   "activationEvents": [
     "onStartupFinished"
   ],
