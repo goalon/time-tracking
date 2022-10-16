@@ -16,7 +16,7 @@ import Helper from '../Helper';
 import { TOKEN_SERVER_HOST } from '../config';
 
 // The server token is not provided in git.
-import { SERVER_TOKEN } from './secret';
+import { SERVER_TOKEN } from '../../secret';
 
 class TimeTrackingUploader {
   private dirPath: string;

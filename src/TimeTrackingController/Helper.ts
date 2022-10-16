@@ -36,7 +36,7 @@ class Helper {
 
     const lastUploadDateTime = DateTime.fromISO(lastUploadTimestamp);
     const hoursInterval = auto ? AUTOUPLOAD_INTERVAL_HOURS : MANUAL_UPLOAD_INTERVAL_HOURS;
-    if (DateTime.now().diff(lastUploadDateTime).hours < hoursInterval) {
+    if (DateTime.now().diff(lastUploadDateTime).as('hours') < hoursInterval) {
       if (!auto) {
         this.showNotification(
           `Upload unavailable. Last upload took place less than ${MANUAL_UPLOAD_INTERVAL_HOURS} hours ago.`,

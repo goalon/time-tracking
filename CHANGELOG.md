@@ -19,3 +19,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 1.0.3
 
 - Make the notification for limiting manual uploading as an error variant
+
+## 1.0.4
+
+- Fix checking the last upload time and add Sentry
