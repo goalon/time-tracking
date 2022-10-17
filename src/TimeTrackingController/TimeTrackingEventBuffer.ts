@@ -56,7 +56,14 @@ class TimeTrackingEventBuffer {
 
   private filterLastHour() {
     const hourAgoDateTime = DateTime.now().minus({ hours: 1 });
-    this.liveBuffer = this.liveBuffer.filter((event) => !event.interval.isBefore(hourAgoDateTime));
+    const lastHourLiveBuffer = this.liveBuffer.filter(
+      (event) => !event.interval.isBefore(hourAgoDateTime)
+    );
+    
+    // Prevent the live buffer from being empty at any time.
+    this.liveBuffer = lastHourLiveBuffer.length ?
+      lastHourLiveBuffer :
+      this.liveBuffer.slice(-1);
   }
 }
 

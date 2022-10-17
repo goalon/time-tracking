@@ -23,3 +23,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 1.0.4
 
 - Fix checking the last upload time and add Sentry
+
+## 1.0.5
+
+- Fix the bug with the live buffer being empty
