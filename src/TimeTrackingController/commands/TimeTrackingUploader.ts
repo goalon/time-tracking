@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import fetch from 'node-fetch';
 import * as fs from 'fs/promises';
+import { constants } from 'fs';
 import * as tar from 'tar';
 import { Dropbox, Error, files } from 'dropbox';
 import { DateTime } from 'luxon';
@@ -36,6 +37,15 @@ class TimeTrackingUploader {
   static readonly id: string = 'timeTracking.upload';
 
   async run(auto: boolean = true) {
+    try {
+      await fs.access(this.dirPath, constants.R_OK | constants.W_OK);
+    } catch {
+      if (!auto) {
+        Helper.showNotification("No data to upload", true);
+      }
+      return;
+    }
+
     // This tokenization schema is subject to hypothetical future changes.
     const accessTokenPromise = this.getAccessToken();
     const compressedArchivePromise = this.createCompressedArchive();

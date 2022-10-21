@@ -8,6 +8,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as nunjucks from 'nunjucks';
+import * as fs from 'fs';
 import Helper from './Helper';
 
 // The way of loading node modules is inspired by
@@ -60,7 +61,9 @@ class TimeTrackingWebview {
 			...Helper.getTimestampMetadata(context),
 		};
 		
-		this.content = nunjucks.render(templatePath, templateVariables);
+		// Workaround for an issue with `nunjucks.render` on Windows.
+		const templateStr = fs.readFileSync(templatePath).toString();
+		this.content = nunjucks.renderString(templateStr, templateVariables);
 	}
 
 	private static getTargetUri(
